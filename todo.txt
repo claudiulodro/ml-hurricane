@@ -1,0 +1,15 @@
+Models:
+street light
+concrete divider
+houses far away (3 models)
+
+Particles:
+Rain
+Clouds
+Fog
+Splashing water
+
+Textures:
+Concrete
+Road
+Water?
