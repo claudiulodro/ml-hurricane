@@ -1,7 +1,8 @@
-const BACKGROUND_BASE_COLOR = 0x333333;
+const BACKGROUND_BASE_COLOR = 0x999999;
 
 var loader = new THREE.JSONLoader();
 var scene = new THREE.Scene();
+scene.fog = new THREE.FogExp2( 0x444444, 0.002 );
 var camera = new THREE.PerspectiveCamera( 45, window.innerWidth / window.innerHeight, 0.1, 1000 );
 var renderer = new THREE.WebGLRenderer();
 renderer.setSize( window.innerWidth, window.innerHeight );
@@ -13,23 +14,38 @@ function setUp() {
 	camera.position.y = 60;
 	camera.position.x = 0;
 	camera.rotation.x = 1.6;
+	setupSky();
 	addTerrain();
-	addLight();
 
 	window.addEventListener( 'resize', onWindowResize, false );
 }
 
+function setupSky() {
+	var shade = 100;
+	const change_amount = 10;
+	const max_lightness = 150;
+
+	var point_light = new THREE.PointLight( 0xFFFFFF, .8 );
+	point_light.position.x = 10;
+	point_light.position.y = 40;
+	point_light.position.z = 20;
+	point_light.rotation.x = 0.5;
+	point_light.castShadow = true;
+	scene.add( point_light );
+}
+
 function addTerrain() {
 
-	//road
+	// Road
 	const road_width = 120;
 	const road_length = 360;
 	var road_geometry = new THREE.PlaneGeometry( road_width, road_length, road_width - 1, road_length - 1 );
 	var road_material = new THREE.MeshLambertMaterial( {color: 0xff0000, side: THREE.DoubleSide} );
 	var road = new THREE.Mesh( road_geometry, road_material );
+	road.receiveShadow = true;
 	scene.add( road );
 
-	//sidewalks
+	// Sidewalks
 	const sidewalk_width = 20;
 	const sidewalk_length = road_length;
 	const sidewalk_height = 4;
@@ -37,14 +53,16 @@ function addTerrain() {
 	var sidewalk_material = new THREE.MeshLambertMaterial( {color: 0x00ff00} );
 
 	var sidewalk_left = new THREE.Mesh( sidewalk_geometry, sidewalk_material );
+	sidewalk_left.receiveShadow = true;
 	sidewalk_left.position.x = - road_width / 2;
 	scene.add( sidewalk_left );
 	
 	var sidewalk_right = new THREE.Mesh( sidewalk_geometry, sidewalk_material );
+	sidewalk_right.receiveShadow = true;
 	sidewalk_right.position.x = road_width / 2;
 	scene.add( sidewalk_right );
 
-	//bridge sides
+	// Bridge sides
 	const barrier_width = 4;
 	const barrier_length = road_length;
 	const barrier_height = 10;
@@ -54,33 +72,35 @@ function addTerrain() {
 	var barrier_left = new THREE.Mesh( barrier_geometry, barrier_material );
 	barrier_left.position.x = - (road_width / 2) - ( sidewalk_width / 2 );
 	barrier_left.position.y = sidewalk_height;
+	barrier_left.receiveShadow = true;
 	scene.add( barrier_left );
 
 	var barrier_right = new THREE.Mesh( barrier_geometry, barrier_material );
 	barrier_right.position.x = (road_width / 2) + ( sidewalk_width / 2 );
 	barrier_right.position.y = sidewalk_height;
+	barrier_right.receiveShadow = true;
 	scene.add( barrier_right );
 
-	//water
-	const water_width = 200;
+	// Water
+	const water_width = 400;
 	const water_length = road_length;
 	var water_geometry = new THREE.PlaneGeometry( water_width, water_length, water_width - 1, water_length - 1 );
-	var water_material = new THREE.MeshPhongMaterial( {color: 0x0000FF, side: THREE.DoubleSide} );
+	var water_material = new THREE.MeshPhongMaterial( {color: 0xaaaaFF, side: THREE.DoubleSide} );
 
 	var water_left = new THREE.Mesh( water_geometry, water_material );
-	water_left.position.x = - water_width + barrier_left.position.y + 40;
+	water_left.position.x = - water_width + barrier_left.position.y + 80;
 	scene.add( water_left );
 
 	var water_right = new THREE.Mesh( water_geometry, water_material );
-	water_right.position.x = water_width - barrier_left.position.y - 40;
+	water_right.position.x = water_width - barrier_left.position.y - 80;
 	scene.add( water_right );
 
-	//distance ground
+	// Distance road
 	const south_road_width = 120;
 	const south_road_length = 400
 	var south_road_geometry = new THREE.PlaneGeometry( south_road_width, south_road_length, south_road_width - 1, south_road_length - 1 );
 	var south_road = new THREE.Mesh( south_road_geometry, road_material );
-	south_road.rotation.z = 1.6;
+	south_road.rotation.z = Math.PI / 2;
 	south_road.rotation.x = 0.2;
 	south_road.position.y = road_length - south_road_width;
 	south_road.position.z = -15;;	
@@ -90,32 +110,189 @@ function addTerrain() {
 	const north_road_length = 400
 	var north_road_geometry = new THREE.PlaneGeometry( north_road_width, north_road_length, north_road_width - 1, north_road_length - 1 );
 	var north_road = new THREE.Mesh( north_road_geometry, road_material );
-	north_road.rotation.z = 1.6;
+	north_road.rotation.z = Math.PI / 2;
 	north_road.rotation.x = - 0.2;
 	north_road.position.y = - road_length + south_road_width;
 	north_road.position.z = -15;;	
 	scene.add( north_road );
 
-	//lamp posts
-	loader.load( "model/lamppost.json", function( geometry ) {
-		var model_material = new THREE.MeshLambertMaterial( { color: 0xFFFFFF } );
-		var model_mesh = new THREE.Mesh( geometry, model_material );
-	//	model_mesh.scale.set( 10, 10, 10 );
-		model_mesh.position.set( 0, 0, 0 );
-		scene.add( model_mesh );
+	// Lamp posts
+	loader.load( "assets/model/lamppost.json", function( geometry ) {
+		var post_material = new THREE.MeshPhongMaterial( { color: 0xFFFFFF } );
+
+		const post_coordinates = [
+
+			// South
+			{
+				'rotation': 0,
+				'position': [ ( road_width / 2 ) + 10, -80, 0 ]
+			},
+			{
+				'rotation': Math.PI,
+				'position': [ - ( road_width / 2 ) - 20, -120, 0 ]
+			},
+			{
+				'rotation': Math.PI,
+				'position': [ - ( road_width / 2 ) - 20, -280, 0 ]
+			},
+
+			// North
+			{
+				'rotation': 0,
+				'position': [ ( road_width / 2 ) + 20, 150, 0 ]
+			}
+		];
+
+		for ( var i = 0; i < post_coordinates.length; ++i ) {
+			var post_mesh = new THREE.Mesh( geometry, post_material );
+			post_mesh.scale.set( 5, 5, 5 );
+			post_mesh.position.set( post_coordinates[i]['position'][0], post_coordinates[i]['position'][1], post_coordinates[i]['position'][2] )
+			post_mesh.rotation.y = post_coordinates[i]['rotation'];
+			post_mesh.rotation.x = Math.PI / 2;
+			post_mesh.castShadow = true;
+			scene.add( post_mesh );
+		}
 	} );
 
-	//houses
+	// House 1
+	loader.load( "assets/model/house1.json", function( geometry ) {
+		var post_material = new THREE.MeshPhongMaterial( { color: 0x111111 } );
 
-}
+		const post_coordinates = [
 
-function addLight() {
-	var point_light = new THREE.PointLight( 0xFFFFFF, .75 );
-	point_light.position.x = 10;
-	point_light.position.y = 40;
-	point_light.position.z = 20;
-	point_light.rotation.x = 0.5;
-	scene.add( point_light );
+			// South
+			{
+				'rotation': 3 * Math.PI / 4,
+				'position': [ 120, -200, 5 ]
+			},
+
+			// North
+			{
+				'rotation': 2 * Math.PI / 3,
+				'position': [ -60, 580, -25 ],
+				'scale': 15
+			},
+			{
+				'rotation': Math.PI / 2,
+				'position': [ 100, 580, -25 ],
+				'scale': 15
+			}	
+		];
+
+		for ( var i = 0; i < post_coordinates.length; ++i ) {
+			var post_mesh = new THREE.Mesh( geometry, post_material );
+			if ( 'undefined' === typeof post_coordinates[i]['scale'] ) {
+				post_mesh.scale.set( 5, 5, 5 );
+			} else {
+				post_mesh.scale.set( post_coordinates[i]['scale'], post_coordinates[i]['scale'], post_coordinates[i]['scale'] );
+			}
+			post_mesh.position.set( post_coordinates[i]['position'][0], post_coordinates[i]['position'][1], post_coordinates[i]['position'][2] )
+			post_mesh.rotation.y = post_coordinates[i]['rotation'];
+			post_mesh.rotation.x = Math.PI / 2;
+			post_mesh.castShadow = true;
+			scene.add( post_mesh );
+		}
+	} );
+
+	// House 2
+	loader.load( "assets/model/house2.json", function( geometry ) {
+		var post_material = new THREE.MeshPhongMaterial( { color: 0x333333 } );
+
+		const post_coordinates = [
+
+			// South
+			{
+				'rotation': Math.PI / 3,
+				'position': [ 200, -280, 0 ]
+			},
+			{
+				'rotation': Math.PI / 3,
+				'position': [ -250, -480, 0 ]
+			},
+			{
+				'rotation': Math.PI / 2,
+				'position': [ -150, -580, 20 ]
+			},
+			{
+				'rotation': Math.PI,
+				'position': [ - ( road_width / 2 ) - 20, -380, 0 ]
+			},
+
+			// North
+			{
+				'rotation': 2 * Math.PI / 3,
+				'position': [ -60, 480, -15 ],
+				'scale': 15
+			},
+			{
+				'rotation': Math.PI / 2,
+				'position': [ -200, 480, -15 ],
+				'scale': 15
+			}	
+		];
+
+		for ( var i = 0; i < post_coordinates.length; ++i ) {
+			var post_mesh = new THREE.Mesh( geometry, post_material );
+			if ( 'undefined' === typeof post_coordinates[i]['scale'] ) {
+				post_mesh.scale.set( 5, 5, 5 );
+			} else {
+				post_mesh.scale.set( post_coordinates[i]['scale'], post_coordinates[i]['scale'], post_coordinates[i]['scale'] );
+			}
+			post_mesh.position.set( post_coordinates[i]['position'][0], post_coordinates[i]['position'][1], post_coordinates[i]['position'][2] )
+			post_mesh.rotation.y = post_coordinates[i]['rotation'];
+			post_mesh.rotation.x = Math.PI / 2;
+			post_mesh.castShadow = true;
+			scene.add( post_mesh );
+		}
+	} );
+
+	// House 3
+	loader.load( "assets/model/house3.json", function( geometry ) {
+		var post_material = new THREE.MeshPhongMaterial( { color: 0x444444 } );
+
+		const post_coordinates = [
+
+			// South
+			{
+				'rotation': Math.PI / 3,
+				'position': [ 200, -480, 0 ]
+			},
+			{
+				'rotation': Math.PI / 2,
+				'position': [ -200, -480, 0 ]
+			},
+			{
+				'rotation': Math.PI / 2,
+				'position': [ -150, -580, 0 ]
+			},
+			{
+				'rotation': Math.PI,
+				'position': [ - ( road_width / 2 ) - 20, -480, 0 ]
+			},
+
+			// North
+			{
+				'rotation': 2 * Math.PI / 3,
+				'position': [ 120, 480, -15 ],
+				'scale': 15
+			}	
+		];
+
+		for ( var i = 0; i < post_coordinates.length; ++i ) {
+			var post_mesh = new THREE.Mesh( geometry, post_material );
+			if ( 'undefined' === typeof post_coordinates[i]['scale'] ) {
+				post_mesh.scale.set( 5, 5, 5 );
+			} else {
+				post_mesh.scale.set( post_coordinates[i]['scale'], post_coordinates[i]['scale'], post_coordinates[i]['scale'] );
+			}
+			post_mesh.position.set( post_coordinates[i]['position'][0], post_coordinates[i]['position'][1], post_coordinates[i]['position'][2] )
+			post_mesh.rotation.y = post_coordinates[i]['rotation'];
+			post_mesh.rotation.x = Math.PI / 2;
+			post_mesh.castShadow = true;
+			scene.add( post_mesh );
+		}
+	} );
+
 }
 
 function setUpControls() {
@@ -131,7 +308,9 @@ function onWindowResize() {
 function render() {
 	requestAnimationFrame( render );
 	renderer.render( scene, camera );
-	camera.rotation.y += 0.01;
+	//camera.rotation.y  += 0.01;//= Math.PI;
+		camera.rotation.y  = Math.PI;
+
 }
 
 setUp();
