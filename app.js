@@ -1,10 +1,71 @@
 const BACKGROUND_BASE_COLOR = 0x999999;
+var CAMERA_SPEED = 0.03;
 
+var camera = new THREE.PerspectiveCamera( 45, window.innerWidth / window.innerHeight, 0.1, 1000 );
 var loader = new THREE.JSONLoader();
 var scene = new THREE.Scene();
-scene.fog = new THREE.FogExp2( 0x666666, 0.0035 );
-scene.background = new THREE.Color( 0x666666 );
-var camera = new THREE.PerspectiveCamera( 45, window.innerWidth / window.innerHeight, 0.1, 1000 );
+scene.fog = new THREE.FogExp2( 0x0000, 0.0025 );
+scene.background = new THREE.Color( 0x0000 );
+var bg_texture_loader = new THREE.TextureLoader();
+var horizontal_movement = false;
+var vertical_movement = false;
+controls = new THREE.PointerLockControls( camera );
+scene.add( controls.getObject() );
+
+var controlsEnabled = false;
+var prevTime = performance.now();
+var velocity = new THREE.Vector3();
+
+var havePointerLock = 'pointerLockElement' in document || 'mozPointerLockElement' in document || 'webkitPointerLockElement' in document;
+
+if ( havePointerLock ) {
+
+	var element = document.body;
+
+	const pointerlockchange = function ( event ) {
+		if ( document.pointerLockElement === element || document.mozPointerLockElement === element || document.webkitPointerLockElement === element ) {
+			controlsEnabled = true;
+			controls.enabled = true;
+		} else {
+			controls.enabled = false;
+		}
+	};
+
+	const pointerlockerror = function ( event ) {
+		console.log( "ERROR" );
+		console.log( event );
+	}
+
+	document.addEventListener( 'pointerlockchange', pointerlockchange, false );
+	document.addEventListener( 'mozpointerlockchange', pointerlockchange, false );
+	document.addEventListener( 'webkitpointerlockchange', pointerlockchange, false );
+	document.addEventListener( 'pointerlockerror', pointerlockerror, false );
+	document.addEventListener( 'mozpointerlockerror', pointerlockerror, false );
+	document.addEventListener( 'webkitpointerlockerror', pointerlockerror, false );
+
+	element.addEventListener( 'click', function ( event ) {
+
+		// Ask the browser to lock the pointer
+		element.requestPointerLock = element.requestPointerLock || element.mozRequestPointerLock || element.webkitRequestPointerLock;
+		element.requestPointerLock();
+
+	}, false );
+
+} else {
+	console.log( "NOT SUPPORTED" );
+}
+
+var bg_texture = bg_texture_loader.load( 'assets/image/bg.jpg', function ( texture ) {
+   	texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
+   	texture.offset.set( 0, 0 );
+   	texture.repeat.set( 1, 1 );
+   	scene.background = texture;
+
+   	setInterval(function(){
+   		texture.offset.x -= 0.005;
+   	}, 30 );
+} );
+
 var renderer = new THREE.WebGLRenderer();
 renderer.setSize( window.innerWidth, window.innerHeight );
 //renderer.setClearColor( BACKGROUND_BASE_COLOR );
@@ -17,7 +78,7 @@ function setUp() {
 	camera.rotation.x = 1.6;
 	setupSky();
 	addTerrain();
-
+	setUpControls();
 	window.addEventListener( 'resize', onWindowResize, false );
 }
 
@@ -61,12 +122,12 @@ function setupSky() {
 }
 
 function addTerrain() {
+	var texture_loader = new THREE.TextureLoader();
 
 	// Road
 	const road_width = 120;
 	const road_length = 360;
 	var road_geometry = new THREE.PlaneGeometry( road_width, road_length, road_width - 1, road_length - 1 );
-	var texture_loader = new THREE.TextureLoader();
 
 	var road_texture = texture_loader.load( 'assets/image/asphalt.jpg', function ( texture ) {
     	texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
@@ -133,11 +194,11 @@ function addTerrain() {
 	var water_material = new THREE.MeshPhongMaterial( {color: 0xaaaaFF, side: THREE.DoubleSide} );
 
 	var water_left = new THREE.Mesh( water_geometry, water_material );
-	water_left.position.x = - water_width + barrier_left.position.y + 80;
+	water_left.position.x = - water_width + barrier_left.position.y + 120;
 	scene.add( water_left );
 
 	var water_right = new THREE.Mesh( water_geometry, water_material );
-	water_right.position.x = water_width - barrier_left.position.y - 80;
+	water_right.position.x = water_width - barrier_left.position.y - 120;
 	scene.add( water_right );
 
 	// Distance road
@@ -170,6 +231,44 @@ function addTerrain() {
 	north_road.position.y = - road_length + south_road_width;
 	north_road.position.z = -15;	
 	scene.add( north_road );
+
+	// Land
+	loader.load( "assets/model/terrain.json", function( geometry ) {
+		var land_material = new THREE.MeshPhongMaterial( {color: 0x332200, side: THREE.DoubleSide} );
+
+		const land_coordinates = [
+
+			// South
+			{
+				'rotation': 0,
+				'position': [ 0, -680, 0 ]
+			},
+			{
+				'rotation': 0,
+				'position': [ 500, -680, 0 ]
+			},
+			{
+				'rotation': 0,
+				'position': [ -500, -680, 0 ]
+			},
+
+			// North
+			{
+				'rotation': 0,
+				'position': [ 0, 600, -20 ]
+			}
+		];
+
+		for ( var i = 0; i < land_coordinates.length; ++i ) {
+			var post_mesh = new THREE.Mesh( geometry, land_material );
+			post_mesh.scale.set( 45, 15, 15 );
+			post_mesh.position.set( land_coordinates[i]['position'][0], land_coordinates[i]['position'][1], land_coordinates[i]['position'][2] )
+			post_mesh.rotation.y = land_coordinates[i]['rotation'];
+			post_mesh.rotation.x = Math.PI / 2;
+			post_mesh.castShadow = true;
+			scene.add( post_mesh );
+		}
+	} );
 
 	// Lamp posts
 	loader.load( "assets/model/lamppost.json?46", function( geometry ) {
@@ -375,8 +474,44 @@ function addTerrain() {
 }
 
 function setUpControls() {
-
+	setupMouse();
 }
+
+function setupMouse() {
+	var previous = {
+		screenX: 0,
+		screenY: 0
+	};
+
+	document.onmousemove = function( evt ) {
+		horizontal_movement = ( evt.screenX > previous.screenX ) ? 'right' : 'left';
+		vertical_movement = ( evt.screenY > previous.screenY ) ? 'down' : 'up';
+		previous.screenX = evt.screenX;
+		previous.screenY = evt.screenY;
+	};
+}
+
+function updateMouseLook() {
+	if ( 'left' == horizontal_movement ) {
+		camera.rotation.y += CAMERA_SPEED;
+	} 
+	if ( 'right' == horizontal_movement ) {
+		camera.rotation.y -= CAMERA_SPEED;
+	}
+	if ( 'up' == vertical_movement ) {
+		camera.rotation.x += ( CAMERA_SPEED / 2 );
+	}
+	if ( 'down' == vertical_movement ) {
+		camera.rotation.x -= ( CAMERA_SPEED / 2 );
+	}
+	// Need to level off vertical rotation when moving horizontally.
+	// Currently it spins off-axis like a globe
+	horizontal_movement = false;
+	vertical_movement = false;
+	var PI_2_3 = 2 * Math.PI / 3;
+	//camera.rotation.x = Math.max( Math.PI - PI_2_3, Math.min( PI_2_3, camera.rotation.x ) );
+}
+
 
 function onWindowResize() {
 	camera.aspect = window.innerWidth / window.innerHeight;
@@ -386,10 +521,8 @@ function onWindowResize() {
 
 function render() {
 	requestAnimationFrame( render );
+	//updateMouseLook();
 	renderer.render( scene, camera );
-	// camera.rotation.y  += 0.005;//= Math.PI;
-		camera.rotation.y  = Math.PI;
-
 }
 
 setUp();
