@@ -1,4 +1,3 @@
-const BACKGROUND_BASE_COLOR = 0x999999;
 var CAMERA_SPEED = 0.03;
 
 var camera = new THREE.PerspectiveCamera( 45, window.innerWidth / window.innerHeight, 0.1, 1000 );
@@ -7,53 +6,13 @@ var scene = new THREE.Scene();
 scene.fog = new THREE.FogExp2( 0x0000, 0.0025 );
 scene.background = new THREE.Color( 0x0000 );
 var bg_texture_loader = new THREE.TextureLoader();
-var horizontal_movement = false;
-var vertical_movement = false;
 controls = new THREE.PointerLockControls( camera );
 scene.add( controls.getObject() );
+mobileControls = new THREE.DeviceOrientationControls( camera );
 
 var controlsEnabled = false;
 var prevTime = performance.now();
 var velocity = new THREE.Vector3();
-
-var havePointerLock = 'pointerLockElement' in document || 'mozPointerLockElement' in document || 'webkitPointerLockElement' in document;
-
-if ( havePointerLock ) {
-
-	var element = document.body;
-
-	const pointerlockchange = function ( event ) {
-		if ( document.pointerLockElement === element || document.mozPointerLockElement === element || document.webkitPointerLockElement === element ) {
-			controlsEnabled = true;
-			controls.enabled = true;
-		} else {
-			controls.enabled = false;
-		}
-	};
-
-	const pointerlockerror = function ( event ) {
-		console.log( "ERROR" );
-		console.log( event );
-	}
-
-	document.addEventListener( 'pointerlockchange', pointerlockchange, false );
-	document.addEventListener( 'mozpointerlockchange', pointerlockchange, false );
-	document.addEventListener( 'webkitpointerlockchange', pointerlockchange, false );
-	document.addEventListener( 'pointerlockerror', pointerlockerror, false );
-	document.addEventListener( 'mozpointerlockerror', pointerlockerror, false );
-	document.addEventListener( 'webkitpointerlockerror', pointerlockerror, false );
-
-	element.addEventListener( 'click', function ( event ) {
-
-		// Ask the browser to lock the pointer
-		element.requestPointerLock = element.requestPointerLock || element.mozRequestPointerLock || element.webkitRequestPointerLock;
-		element.requestPointerLock();
-
-	}, false );
-
-} else {
-	console.log( "NOT SUPPORTED" );
-}
 
 var bg_texture = bg_texture_loader.load( 'assets/image/bg.jpg', function ( texture ) {
    	texture.wrapS = texture.wrapT = THREE.RepeatWrapping;
@@ -61,14 +20,14 @@ var bg_texture = bg_texture_loader.load( 'assets/image/bg.jpg', function ( textu
    	texture.repeat.set( 1, 1 );
    	scene.background = texture;
 
-   	setInterval(function(){
+   	// Move sky.
+   	setInterval( function(){
    		texture.offset.x -= 0.005;
    	}, 30 );
 } );
 
 var renderer = new THREE.WebGLRenderer();
 renderer.setSize( window.innerWidth, window.innerHeight );
-//renderer.setClearColor( BACKGROUND_BASE_COLOR );
 document.body.appendChild( renderer.domElement );
 
 function setUp() {
@@ -478,40 +437,45 @@ function setUpControls() {
 }
 
 function setupMouse() {
-	var previous = {
-		screenX: 0,
-		screenY: 0
-	};
+	var havePointerLock = 'pointerLockElement' in document || 'mozPointerLockElement' in document || 'webkitPointerLockElement' in document;
 
-	document.onmousemove = function( evt ) {
-		horizontal_movement = ( evt.screenX > previous.screenX ) ? 'right' : 'left';
-		vertical_movement = ( evt.screenY > previous.screenY ) ? 'down' : 'up';
-		previous.screenX = evt.screenX;
-		previous.screenY = evt.screenY;
-	};
+	if ( havePointerLock ) {
+
+		var element = document.body;
+
+		const pointerlockchange = function ( event ) {
+			if ( document.pointerLockElement === element || document.mozPointerLockElement === element || document.webkitPointerLockElement === element ) {
+				controlsEnabled = true;
+				controls.enabled = true;
+			} else {
+				controls.enabled = false;
+			}
+		};
+
+		const pointerlockerror = function ( event ) {
+			console.log( "ERROR" );
+			console.log( event );
+		}
+
+		document.addEventListener( 'pointerlockchange', pointerlockchange, false );
+		document.addEventListener( 'mozpointerlockchange', pointerlockchange, false );
+		document.addEventListener( 'webkitpointerlockchange', pointerlockchange, false );
+		document.addEventListener( 'pointerlockerror', pointerlockerror, false );
+		document.addEventListener( 'mozpointerlockerror', pointerlockerror, false );
+		document.addEventListener( 'webkitpointerlockerror', pointerlockerror, false );
+
+		element.addEventListener( 'click', function ( event ) {
+
+			// Ask the browser to lock the pointer
+			element.requestPointerLock = element.requestPointerLock || element.mozRequestPointerLock || element.webkitRequestPointerLock;
+			element.requestPointerLock();
+
+		}, false );
+
+	} else {
+		console.log( "POINTERLOCK NOT SUPPORTED" );
+	}
 }
-
-function updateMouseLook() {
-	if ( 'left' == horizontal_movement ) {
-		camera.rotation.y += CAMERA_SPEED;
-	} 
-	if ( 'right' == horizontal_movement ) {
-		camera.rotation.y -= CAMERA_SPEED;
-	}
-	if ( 'up' == vertical_movement ) {
-		camera.rotation.x += ( CAMERA_SPEED / 2 );
-	}
-	if ( 'down' == vertical_movement ) {
-		camera.rotation.x -= ( CAMERA_SPEED / 2 );
-	}
-	// Need to level off vertical rotation when moving horizontally.
-	// Currently it spins off-axis like a globe
-	horizontal_movement = false;
-	vertical_movement = false;
-	var PI_2_3 = 2 * Math.PI / 3;
-	//camera.rotation.x = Math.max( Math.PI - PI_2_3, Math.min( PI_2_3, camera.rotation.x ) );
-}
-
 
 function onWindowResize() {
 	camera.aspect = window.innerWidth / window.innerHeight;
@@ -521,7 +485,7 @@ function onWindowResize() {
 
 function render() {
 	requestAnimationFrame( render );
-	//updateMouseLook();
+	mobileControls.update();
 	renderer.render( scene, camera );
 }
 
