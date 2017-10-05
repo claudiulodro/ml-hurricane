@@ -1,6 +1,7 @@
 var CAMERA_SPEED = 0.03;
 
 var camera = new THREE.PerspectiveCamera( 45, window.innerWidth / window.innerHeight, 0.1, 1000 );
+camera.rotation.y  = Math.PI;
 var loader = new THREE.JSONLoader();
 var scene = new THREE.Scene();
 scene.fog = new THREE.FogExp2( 0x0000, 0.0025 );
