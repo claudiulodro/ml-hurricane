@@ -84,11 +84,11 @@ THREE.DeviceOrientationControls = function( object ) {
 		if ( scope.enabled === false ) return;
 
 		var alpha = scope.deviceOrientation.alpha ? - THREE.Math.degToRad( scope.deviceOrientation.alpha ) + this.alphaOffsetAngle : 0; // Z
-		var beta = scope.deviceOrientation.beta ? - THREE.Math.degToRad( scope.deviceOrientation.beta - 90 ) : 0; // X'
+		var beta = scope.deviceOrientation.beta ? THREE.Math.degToRad( scope.deviceOrientation.beta - 90 ) : 0; // X'
 		var gamma = scope.deviceOrientation.gamma ? THREE.Math.degToRad( scope.deviceOrientation.gamma ) : 0; // Y''
 		var orient = scope.screenOrientation ? THREE.Math.degToRad( scope.screenOrientation ) : 0; // O
 
-		setObjectQuaternion( scope.object.quaternion, 0, beta, alpha + Math.PI, orient );
+		setObjectQuaternion( scope.object.quaternion, 0, beta, alpha, orient );
 		this.alpha = alpha;
 
 	};

@@ -1,7 +1,6 @@
 var CAMERA_SPEED = 0.03;
 
 var camera = new THREE.PerspectiveCamera( 45, window.innerWidth / window.innerHeight, 0.1, 1000 );
-camera.rotation.y  = Math.PI;
 var loader = new THREE.JSONLoader();
 var scene = new THREE.Scene();
 scene.fog = new THREE.FogExp2( 0x0000, 0.0025 );
@@ -33,7 +32,7 @@ document.body.appendChild( renderer.domElement );
 
 function setUp() {
 	camera.position.z = 10;
-	camera.position.y = 60;
+	camera.position.y = 0;
 	camera.position.x = 0;
 	camera.rotation.x = 1.6;
 	setupSky();
@@ -49,7 +48,7 @@ function setupSky() {
 
 	var point_light = new THREE.PointLight( 0xFFFFFF, .5 );
 	point_light.position.x = 10;
-	point_light.position.y = 40;
+	point_light.position.y = -40;
 	point_light.position.z = 10;
 	//point_light.rotation.x = 0.5;
 	point_light.castShadow = true;
@@ -57,7 +56,7 @@ function setupSky() {
 
 	var point_light = new THREE.PointLight( 0xccccff, .4 );
 	point_light.position.x = -100;
-	point_light.position.y = -120;
+	point_light.position.y = 120;
 	point_light.position.z = 10;
 	//point_light.rotation.x = 0.5;
 	point_light.castShadow = true;
@@ -65,7 +64,7 @@ function setupSky() {
 
 	var point_light = new THREE.PointLight( 0xccccff, .4 );
 	point_light.position.x = 100;
-	point_light.position.y = -120;
+	point_light.position.y = 120;
 	point_light.position.z = 10;
 	//point_light.rotation.x = 0.5;
 	point_light.castShadow = true;
@@ -168,7 +167,7 @@ function addTerrain() {
 	var south_road = new THREE.Mesh( south_road_geometry, road_material );
 	south_road.rotation.z = Math.PI / 2;
 	south_road.rotation.x = 0.2;
-	south_road.position.y = road_length - south_road_width;
+	south_road.position.y = - road_length - south_road_width;
 	south_road.position.z = -15;	
 	scene.add( south_road );
 
@@ -178,7 +177,7 @@ function addTerrain() {
 	var deep_south_road = new THREE.Mesh( deep_south_road_geometry, road_material );
 	deep_south_road.rotation.z = Math.PI / 2;
 	deep_south_road.rotation.x = - 0.2;
-	deep_south_road.position.y = - road_length;
+	deep_south_road.position.y = road_length;
 	deep_south_road.position.z = -10;	
 	scene.add( deep_south_road );
 
@@ -188,7 +187,7 @@ function addTerrain() {
 	var north_road = new THREE.Mesh( north_road_geometry, road_material );
 	north_road.rotation.z = Math.PI / 2;
 	north_road.rotation.x = - 0.2;
-	north_road.position.y = - road_length + south_road_width;
+	north_road.position.y = road_length + south_road_width;
 	north_road.position.z = -15;	
 	scene.add( north_road );
 
@@ -201,21 +200,21 @@ function addTerrain() {
 			// South
 			{
 				'rotation': 0,
-				'position': [ 0, -680, 0 ]
+				'position': [ 0, 680, 0 ]
 			},
 			{
 				'rotation': 0,
-				'position': [ 500, -680, 0 ]
+				'position': [ 500, 680, 0 ]
 			},
 			{
 				'rotation': 0,
-				'position': [ -500, -680, 0 ]
+				'position': [ -500, 680, 0 ]
 			},
 
 			// North
 			{
 				'rotation': 0,
-				'position': [ 0, 600, -20 ]
+				'position': [ 0, -800, 20 ]
 			}
 		];
 
@@ -245,21 +244,21 @@ function addTerrain() {
 			// South
 			{
 				'rotation': 0,
-				'position': [ ( road_width / 2 ) + 10, -80, 0 ]
+				'position': [ ( road_width / 2 ) + 10, 80, 0 ]
 			},
 			{
 				'rotation': Math.PI,
-				'position': [ - ( road_width / 2 ) - 20, -120, 0 ]
+				'position': [ - ( road_width / 2 ) - 20, 120, 0 ]
 			},
 			{
 				'rotation': Math.PI,
-				'position': [ - ( road_width / 2 ) - 20, -280, 0 ]
+				'position': [ - ( road_width / 2 ) - 20, 280, 0 ]
 			},
 
 			// North
 			{
 				'rotation': 0,
-				'position': [ ( road_width / 2 ) + 20, 150, 0 ]
+				'position': [ ( road_width / 2 ) + 20, -150, 0 ]
 			}
 		];
 
@@ -288,20 +287,20 @@ function addTerrain() {
 
 			// South
 			{
-				'rotation': 3 * Math.PI / 4,
-				'position': [ 170, -300, 0 ]
+				'rotation': Math.PI / 2,
+				'position': [ 170, 300, 0 ]
 			},
 
 			// North
 			{
 				'rotation': 2 * Math.PI / 3,
-				'position': [ -130, 580, -100 ],
-				'scale': 25
+				'position': [ -130, -580, -100 ],
+				'scale': 7
 			},
 			{
 				'rotation': Math.PI / 2,
-				'position': [ 100, 580, -25 ],
-				'scale': 25
+				'position': [ 100, -580, -25 ],
+				'scale': 7
 			}	
 		];
 
@@ -335,31 +334,31 @@ function addTerrain() {
 			// South
 			{
 				'rotation': Math.PI / 3,
-				'position': [ 200, -240, 0 ]
+				'position': [ 200, 240, 0 ]
 			},
 			{
 				'rotation': Math.PI / 3,
-				'position': [ -250, -380, 0 ]
+				'position': [ -250, 380, 0 ]
 			},
 			{
 				'rotation': Math.PI / 2,
-				'position': [ -150, -480, 20 ]
+				'position': [ -150, 480, 20 ]
 			},
 			{
 				'rotation': Math.PI,
-				'position': [ - ( road_width / 2 ) - 20, -280, 0 ]
+				'position': [ - ( road_width / 2 ) - 20, 320, 0 ]
 			},
 
 			// North
 			{
 				'rotation': 2 * Math.PI / 3,
-				'position': [ -60, 480, -15 ],
-				'scale': 15
+				'position': [ -60, -480, -15 ],
+				'scale': 7
 			},
 			{
 				'rotation': Math.PI / 2,
-				'position': [ -200, 480, -15 ],
-				'scale': 15
+				'position': [ -200, -480, -15 ],
+				'scale': 7
 			}	
 		];
 
@@ -393,26 +392,26 @@ function addTerrain() {
 			// South
 			{
 				'rotation': Math.PI / 3,
-				'position': [ 150, -380, 0 ]
+				'position': [ 150, 380, 0 ]
 			},
 			{
 				'rotation': Math.PI / 2,
-				'position': [ -200, -380, 0 ]
+				'position': [ -200, 380, 0 ]
 			},
 			{
 				'rotation': Math.PI / 2,
-				'position': [ -150, -480, 0 ]
+				'position': [ -150, 480, 0 ]
 			},
 			{
 				'rotation': Math.PI,
-				'position': [ - ( road_width / 2 ) - 20, -380, 0 ]
+				'position': [ - ( road_width / 2 ) - 20, 380, 0 ]
 			},
 
 			// North
 			{
 				'rotation': 2 * Math.PI / 3,
-				'position': [ 120, 480, -15 ],
-				'scale': 15
+				'position': [ 120, -480, -15 ],
+				'scale': 7
 			}	
 		];
 
