@@ -46,9 +46,9 @@ function setUp() {
 }
 
 function setupSky() {
-	var point_light = new THREE.PointLight( 0xFFFFFF, .8 );
+	var point_light = new THREE.PointLight( 0xFFFFFF, 1 );
 	point_light.position.x = 10;
-	point_light.position.y = 200;
+	point_light.position.y = 240;
 	point_light.position.z = 40;
 	point_light.castShadow = true;
 	scene.add( point_light );
@@ -190,6 +190,78 @@ function addTerrain() {
 	north_road.position.y = road_length - 60;
 	north_road.position.z = bridge_height;	
 	scene.add( north_road );
+
+	const brick_coordinates = [
+		{
+			'rotation': Math.PI / 3,
+			'position': [ -60, 240, 0 ],
+			'size': [ 3, 9, 2 ]
+		},
+		{
+			'rotation': 0,
+			'position': [ -50, 240, 0 ],
+			'size': [ 10, 190, 2 ],
+			'skew': 0.2
+		},
+		{
+			'rotation': 0,
+			'position': [ 50, 240, 0 ],
+			'size': [ 10, 190, 2 ],
+			'skew': 0.2
+		},
+		{
+			'rotation': Math.PI / 3,
+			'position': [ 60, 240, 0 ],
+			'size': [ 3, 9, 2 ]
+		},
+		{
+			'rotation': 0,
+			'position': [ -40, 240, 1 ],
+			'size': [ 3, 9, 2 ],
+			'skew': 0.2
+		},
+		{
+			'rotation': Math.PI / 3,
+			'position': [ -20, 240, 0 ],
+			'size': [ 3, 9, 2 ]
+		},
+		{
+			'rotation': .05,
+			'position': [ 60, 240, 0 ],
+			'size': [ 8, 9, 2 ]
+		},
+		{
+			'rotation': 0.5,
+			'position': [ -10, 220, 0 ],
+			'size': [ 3, 9, 2 ]
+		},
+		{
+			'rotation': 0.3,
+			'position': [ 0, 240, 0 ],
+			'size': [ 3, 9, 2 ]
+		},
+		{
+			'rotation': 0.3,
+			'position': [ -35, 360, 16 ],
+			'size': [ 30, 10, 4 ],
+			'skew': 0.2
+		}
+	];
+	var brick_material = sidewalk_material;
+	for ( var i = 0; i < brick_coordinates.length; ++i ) {
+		var brick_geometry = new THREE.BoxGeometry( brick_coordinates[i]['size'][0], brick_coordinates[i]['size'][1], brick_coordinates[i]['size'][2] );
+		var post_mesh = new THREE.Mesh( brick_geometry, brick_material );
+		post_mesh.position.set( brick_coordinates[i]['position'][0], brick_coordinates[i]['position'][1], brick_coordinates[i]['position'][2] )
+		post_mesh.rotation.y = brick_coordinates[i]['rotation'];
+		if ( 'undefined' === typeof brick_coordinates[i]['skew'] ) {
+			post_mesh.rotation.x = 0;
+		} else {
+			post_mesh.rotation.x = brick_coordinates[i]['skew'];
+		}
+		post_mesh.castShadow = true;
+		scene.add( post_mesh );
+	}
+
 
 	// Land
 	loader.load( "assets/model/terrain.json", function( geometry ) {
