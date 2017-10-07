@@ -24,10 +24,10 @@ THREE.PointerLockControls = function ( camera ) {
 		var movementX = event.movementX || event.mozMovementX || event.webkitMovementX || 0;
 		var movementY = event.movementY || event.mozMovementY || event.webkitMovementY || 0;
 
-		yawObject.rotation.z -= movementX * 0.001;
-		pitchObject.rotation.x -= movementY * 0.001;
+		yawObject.rotation.z -= movementX * 0.0005;
+		pitchObject.rotation.x -= movementY * 0.0005;
 
-		pitchObject.rotation.x = Math.max( - 0.076, Math.min( PI_2, pitchObject.rotation.x ) );
+		pitchObject.rotation.x = Math.max( - 1.576, Math.min( PI_2, pitchObject.rotation.x ) );
 	};
 
 	this.dispose = function() {
