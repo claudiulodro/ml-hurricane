@@ -33,6 +33,19 @@ renderer.context.getExtension('OES_texture_float');
 renderer.context.getExtension('OES_texture_float_linear');
 document.body.appendChild( renderer.domElement );
 
+var composer = new THREE.EffectComposer( renderer );
+composer.addPass( new THREE.RenderPass( scene, camera ) );
+
+var brightnessContrastEffect = new THREE.ShaderPass( THREE.BrightnessContrastShader );
+brightnessContrastEffect.uniforms['brightness']['value'] = .1;
+brightnessContrastEffect.uniforms['contrast']['value'] = .2;
+composer.addPass( brightnessContrastEffect );
+
+var vignetteEffect = new THREE.ShaderPass( THREE.VignetteShader );
+vignetteEffect.renderToScreen = true;
+vignetteEffect.uniforms['darkness']['value'] = 1.5;
+composer.addPass( vignetteEffect );
+
 function setUp() {
 	camera.position.z = 17;
 	camera.position.y = 0;
@@ -52,6 +65,31 @@ function setupSky() {
 	point_light.position.z = 40;
 	point_light.castShadow = true;
 	scene.add( point_light );
+
+	var lightning_going = false;
+	var lightning = function() {
+		const max_flashes = 10;
+		var flashed = 0;
+
+		var flasher = setInterval( function() {
+			const values = [ 1, 1.1, 1.2, 1.2, 1.3, 1.1, 1, 1.1 ];
+			var current = Math.floor( Math.random() * 10 % values.length );
+			point_light.intensity = values[ current ];
+			++flashed;
+			if ( flashed > max_flashes ) {
+				clearInterval( flasher );
+				lightning_going = false;
+			}
+		}, 100 );
+	}
+
+	setInterval( function() {
+		if ( ! lightning_going && 0 === Math.floor( Math.random() * 10 ) ) {
+			lightning_going = true;
+			lightning();
+		}
+	}, 600 );
+
 }
 
 function setUpWater() {
@@ -70,7 +108,7 @@ function setUpWater() {
 			GEOMETRY_ORIGIN : [origx, origz],
 			SUN_DIRECTION : [1.0, -1.0, 1.0],
 			OCEAN_COLOR: new THREE.Vector3(0.004, 0.016, 0.027),
-			SKY_COLOR: new THREE.Vector3(1, 1, 2.8),
+			SKY_COLOR: new THREE.Vector3(.6, .9, 2),
 			EXPOSURE : 0.01,
 			GEOMETRY_RESOLUTION: gres,
 			GEOMETRY_SIZE : gsize,
@@ -592,7 +630,7 @@ function render() {
 	requestAnimationFrame( render );
 	mobileControls.update();
 	updateOcean();
-	renderer.render( scene, camera );
+	composer.render( scene, camera );
 }
 
 setUp();
